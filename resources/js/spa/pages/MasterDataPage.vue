@@ -37,7 +37,7 @@ const tags = ref<Tag[]>([]);
 
 const transitionMap = ref<Record<string, string[]>>({});
 
-const statusForm = reactive({ id: '', code: '', name: '', description: '', is_active: '1', sort_order: 0 });
+const statusForm = reactive({ id: '', code: '', name: '', description: '', is_active: '1', sort_order: '0' });
 const categoryForm = reactive({ id: '', name: '', slug: '', description: '' });
 const tagForm = reactive({ id: '', name: '', slug: '' });
 
@@ -75,7 +75,7 @@ function resetStatusForm() {
   statusForm.name = '';
   statusForm.description = '';
   statusForm.is_active = '1';
-  statusForm.sort_order = 0;
+  statusForm.sort_order = '0';
 }
 
 function resetCategoryForm() {
@@ -95,13 +95,16 @@ async function saveStatus() {
   if (!state.token) return;
 
   try {
+    const parsedSortOrder = Number.parseInt(statusForm.sort_order || '0', 10);
+    const sortOrder = Number.isNaN(parsedSortOrder) ? 0 : parsedSortOrder;
+
     if (statusForm.id) {
       await updateStatusMaster(state.token, statusForm.id, {
         code: statusForm.code,
         name: statusForm.name,
         description: statusForm.description,
         is_active: statusForm.is_active === '1',
-        sort_order: statusForm.sort_order,
+        sort_order: sortOrder,
       });
       push('success', 'Status updated');
     } else {
@@ -110,7 +113,7 @@ async function saveStatus() {
         name: statusForm.name,
         description: statusForm.description,
         is_active: statusForm.is_active === '1',
-        sort_order: statusForm.sort_order,
+        sort_order: sortOrder,
       });
       push('success', 'Status created');
     }
@@ -294,7 +297,7 @@ onMounted(() => {
                   <p class="text-xs text-slate-600">{{ item.description || '-' }} | active: {{ item.is_active ? 'yes' : 'no' }}</p>
                 </div>
                 <div class="flex gap-3 text-sm">
-                  <button class="text-indigo-700 hover:underline" @click="Object.assign(statusForm, { ...item, is_active: item.is_active ? '1' : '0' })">Edit</button>
+                  <button class="text-indigo-700 hover:underline" @click="Object.assign(statusForm, { ...item, is_active: item.is_active ? '1' : '0', sort_order: String(item.sort_order ?? 0) })">Edit</button>
                   <button class="text-red-700 hover:underline" @click="removeStatus(item.id)">Delete</button>
                 </div>
               </div>

@@ -175,6 +175,22 @@ Jalankan seluruh test:
 php artisan test
 ```
 
+## Performance Toolkit
+Optimasi performa yang sudah ditambahkan:
+- index DB untuk query dokumen/relasi utama
+- trigram index PostgreSQL untuk pencarian `title`
+- caching master data (`categories`, `tags`, `statuses`, `status transitions`) + invalidasi saat CRUD
+
+Benchmark query list dokumen:
+```bash
+php artisan app:benchmark-documents --iterations=30
+```
+
+Contoh benchmark dengan filter:
+```bash
+php artisan app:benchmark-documents --iterations=30 --status=active --search=policy
+```
+
 ## Catatan Menu Admin
 Setelah login sebagai admin, menu ini muncul di topbar SPA:
 - `Users`

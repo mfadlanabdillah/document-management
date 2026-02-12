@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\Api\MasterDataController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use App\Models\User;
 use Illuminate\Support\Str;
 
@@ -84,15 +85,19 @@ Route::middleware(['api', 'auth:sanctum'])->group(function () {
     Route::get('/documents/{document}/activities', [DocumentController::class, 'activities']);
 
     Route::get('/categories', function () {
-        return \App\Models\Category::select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        return Cache::remember('master:categories:list', now()->addMinutes(30), function () {
+            return \App\Models\Category::select('id', 'name')
+                ->orderBy('name')
+                ->get();
+        });
     });
 
     Route::get('/tags', function () {
-        return \App\Models\Tag::select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        return Cache::remember('master:tags:list', now()->addMinutes(30), function () {
+            return \App\Models\Tag::select('id', 'name')
+                ->orderBy('name')
+                ->get();
+        });
     });
 
     Route::get('/document-statuses', [MasterDataController::class, 'statusIndex']);

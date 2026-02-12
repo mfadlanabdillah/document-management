@@ -9,6 +9,7 @@ use App\Models\DocumentStatus;
 use App\Models\DocumentStatusTransition;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -17,39 +18,43 @@ class MasterDataController extends Controller
 {
     public function statusIndex()
     {
-        $statuses = DocumentStatus::query()
-            ->with('allowedTransitions:id,code')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        return Cache::remember('master:statuses:list', now()->addMinutes(30), function () {
+            $statuses = DocumentStatus::query()
+                ->with('allowedTransitions:id,code')
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
 
-        return $statuses->map(function (DocumentStatus $status) {
-            return [
-                'id' => $status->id,
-                'code' => $status->code,
-                'name' => $status->name,
-                'description' => $status->description,
-                'is_active' => $status->is_active,
-                'sort_order' => $status->sort_order,
-                'allowed_next_codes' => $status->allowedTransitions->pluck('code')->values(),
-                'created_at' => $status->created_at,
-                'updated_at' => $status->updated_at,
-            ];
+            return $statuses->map(function (DocumentStatus $status) {
+                return [
+                    'id' => $status->id,
+                    'code' => $status->code,
+                    'name' => $status->name,
+                    'description' => $status->description,
+                    'is_active' => $status->is_active,
+                    'sort_order' => $status->sort_order,
+                    'allowed_next_codes' => $status->allowedTransitions->pluck('code')->values(),
+                    'created_at' => $status->created_at,
+                    'updated_at' => $status->updated_at,
+                ];
+            });
         });
     }
 
     public function statusTransitionIndex()
     {
-        return DocumentStatus::query()
-            ->with('allowedTransitions:id,code,name')
-            ->orderBy('sort_order')
-            ->get()
-            ->map(fn (DocumentStatus $status) => [
-                'from_status_id' => $status->id,
-                'from_status_code' => $status->code,
-                'to_status_ids' => $status->allowedTransitions->pluck('id')->values(),
-                'to_status_codes' => $status->allowedTransitions->pluck('code')->values(),
-            ]);
+        return Cache::remember('master:status-transitions:list', now()->addMinutes(30), function () {
+            return DocumentStatus::query()
+                ->with('allowedTransitions:id,code,name')
+                ->orderBy('sort_order')
+                ->get()
+                ->map(fn (DocumentStatus $status) => [
+                    'from_status_id' => $status->id,
+                    'from_status_code' => $status->code,
+                    'to_status_ids' => $status->allowedTransitions->pluck('id')->values(),
+                    'to_status_codes' => $status->allowedTransitions->pluck('code')->values(),
+                ]);
+        });
     }
 
     public function statusTransitionUpdate(Request $request, DocumentStatus $status)
@@ -85,6 +90,8 @@ class MasterDataController extends Controller
             }
         });
 
+        $this->invalidateStatusCaches();
+
         return response()->json(['success' => true]);
     }
 
@@ -107,6 +114,8 @@ class MasterDataController extends Controller
             'is_active' => $validated['is_active'] ?? true,
             'sort_order' => $validated['sort_order'] ?? 0,
         ]);
+
+        $this->invalidateStatusCaches();
 
         return response()->json($status, 201);
     }
@@ -134,6 +143,8 @@ class MasterDataController extends Controller
 
         $status->update($validated);
 
+        $this->invalidateStatusCaches();
+
         return $status->refresh();
     }
 
@@ -159,12 +170,16 @@ class MasterDataController extends Controller
 
         $status->delete();
 
+        $this->invalidateStatusCaches();
+
         return response()->json(['success' => true]);
     }
 
     public function categoryIndex()
     {
-        return Category::query()->orderBy('name')->get();
+        return Cache::remember('master:categories:full', now()->addMinutes(30), function () {
+            return Category::query()->orderBy('name')->get();
+        });
     }
 
     public function categoryStore(Request $request)
@@ -183,6 +198,8 @@ class MasterDataController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
+        $this->invalidateCategoryCaches();
+
         return response()->json($category, 201);
     }
 
@@ -196,6 +213,8 @@ class MasterDataController extends Controller
 
         $category->update($validated);
 
+        $this->invalidateCategoryCaches();
+
         return $category->refresh();
     }
 
@@ -208,12 +227,16 @@ class MasterDataController extends Controller
 
         $category->delete();
 
+        $this->invalidateCategoryCaches();
+
         return response()->json(['success' => true]);
     }
 
     public function tagIndex()
     {
-        return Tag::query()->orderBy('name')->get();
+        return Cache::remember('master:tags:full', now()->addMinutes(30), function () {
+            return Tag::query()->orderBy('name')->get();
+        });
     }
 
     public function tagStore(Request $request)
@@ -230,6 +253,8 @@ class MasterDataController extends Controller
             'slug' => $slug,
         ]);
 
+        $this->invalidateTagCaches();
+
         return response()->json($tag, 201);
     }
 
@@ -242,6 +267,8 @@ class MasterDataController extends Controller
 
         $tag->update($validated);
 
+        $this->invalidateTagCaches();
+
         return $tag->refresh();
     }
 
@@ -250,6 +277,26 @@ class MasterDataController extends Controller
         $tag->documents()->detach();
         $tag->delete();
 
+        $this->invalidateTagCaches();
+
         return response()->json(['success' => true]);
+    }
+
+    private function invalidateStatusCaches(): void
+    {
+        Cache::forget('master:statuses:list');
+        Cache::forget('master:status-transitions:list');
+    }
+
+    private function invalidateCategoryCaches(): void
+    {
+        Cache::forget('master:categories:list');
+        Cache::forget('master:categories:full');
+    }
+
+    private function invalidateTagCaches(): void
+    {
+        Cache::forget('master:tags:list');
+        Cache::forget('master:tags:full');
     }
 }
