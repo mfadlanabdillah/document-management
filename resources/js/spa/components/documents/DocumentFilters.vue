@@ -40,7 +40,7 @@ function apply() {
 </script>
 
 <template>
-  <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+  <section class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-4 shadow-sm">
     <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
       <BaseSelect
         v-model="statusLocal"

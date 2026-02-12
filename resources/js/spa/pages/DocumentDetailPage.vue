@@ -174,38 +174,38 @@ onMounted(async () => {
 
     <main class="mx-auto max-w-5xl space-y-4 px-4 py-6">
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-semibold text-slate-900">Document Detail</h1>
+        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Document Detail</h1>
         <div class="flex gap-2">
           <BaseButton variant="secondary" @click="router.push({ name: 'dashboard' })">Back</BaseButton>
           <BaseButton @click="router.push({ name: 'document-edit', params: { id: documentId } })">Edit</BaseButton>
         </div>
       </div>
 
-      <section v-if="loading" class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">Loading...</section>
+      <section v-if="loading" class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-6 shadow-sm">Loading...</section>
 
-      <section v-else-if="document" class="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section v-else-if="document" class="space-y-4 rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-6 shadow-sm">
         <div class="grid gap-3 md:grid-cols-2">
           <div>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Title</p>
-            <p class="text-slate-900">{{ document.title }}</p>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Title</p>
+            <p class="text-slate-900 dark:text-slate-100">{{ document.title }}</p>
           </div>
           <div>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Category</p>
-            <p class="text-slate-900">{{ document.category?.name ?? '-' }}</p>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Category</p>
+            <p class="text-slate-900 dark:text-slate-100">{{ document.category?.name ?? '-' }}</p>
           </div>
           <div>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Created At</p>
-            <p class="text-slate-900">{{ new Date(document.created_at).toLocaleString() }}</p>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Created At</p>
+            <p class="text-slate-900 dark:text-slate-100">{{ new Date(document.created_at).toLocaleString() }}</p>
           </div>
           <div>
-            <p class="text-xs uppercase tracking-wide text-slate-500">Updated At</p>
-            <p class="text-slate-900">{{ new Date(document.updated_at).toLocaleString() }}</p>
+            <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Updated At</p>
+            <p class="text-slate-900 dark:text-slate-100">{{ new Date(document.updated_at).toLocaleString() }}</p>
           </div>
         </div>
 
         <div>
-          <p class="text-xs uppercase tracking-wide text-slate-500">Current Version</p>
-          <p class="text-slate-900">
+          <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Current Version</p>
+          <p class="text-slate-900 dark:text-slate-100">
             {{
               document.current_version
                 ? `v${document.current_version.version_number} - ${document.current_version.file_name}`
@@ -215,21 +215,21 @@ onMounted(async () => {
         </div>
 
         <div>
-          <p class="text-xs uppercase tracking-wide text-slate-500">Tags</p>
+          <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Tags</p>
           <div class="mt-1 flex flex-wrap gap-2">
             <span
               v-for="tag in document.tags ?? []"
               :key="tag.id"
-              class="rounded-full bg-slate-200 px-3 py-1 text-xs text-slate-800"
+              class="rounded-full bg-slate-200 px-3 py-1 text-xs text-slate-800 dark:bg-slate-700 dark:text-slate-200"
             >
               {{ tag.name }}
             </span>
-            <p v-if="!(document.tags && document.tags.length)" class="text-slate-900">-</p>
+            <p v-if="!(document.tags && document.tags.length)" class="text-slate-900 dark:text-slate-100">-</p>
           </div>
         </div>
 
-        <div class="space-y-2 border-t border-slate-200 pt-4">
-          <p class="text-sm font-medium text-slate-700">Update Status</p>
+        <div class="space-y-2 border-t border-slate-200 dark:border-slate-700 pt-4">
+          <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Update Status</p>
           <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
             <div class="w-full sm:max-w-xs">
               <BaseSelect
@@ -244,22 +244,22 @@ onMounted(async () => {
         </div>
       </section>
 
-      <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">Versions</h2>
+      <section class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-6 shadow-sm">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Versions</h2>
 
         <div class="mt-3 grid gap-3 md:grid-cols-[1fr,auto]">
           <div class="space-y-2">
             <input
               type="file"
               accept=".pdf,.docx,.xlsx"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900/20"
               @change="onVersionFileChange"
             />
             <input
               v-model="versionForm.notes"
               type="text"
               placeholder="Notes (optional)"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900/20"
             />
           </div>
           <div class="flex items-end">
@@ -271,7 +271,7 @@ onMounted(async () => {
 
         <div class="mt-4 overflow-x-auto">
           <table class="min-w-full text-sm">
-            <thead class="bg-slate-100 text-left text-slate-600">
+            <thead class="bg-slate-100 dark:bg-slate-800/60 text-left text-slate-600 dark:text-slate-400">
               <tr>
                 <th class="px-3 py-2">Version</th>
                 <th class="px-3 py-2">File</th>
@@ -282,15 +282,15 @@ onMounted(async () => {
             </thead>
             <tbody>
               <tr v-if="versions.length === 0">
-                <td colspan="5" class="px-3 py-4 text-center text-slate-500">No versions yet.</td>
+                <td colspan="5" class="px-3 py-4 text-center text-slate-500 dark:text-slate-400">No versions yet.</td>
               </tr>
-              <tr v-for="version in versions" :key="version.id" class="border-t border-slate-100">
+              <tr v-for="version in versions" :key="version.id" class="border-t border-slate-100 dark:border-slate-800">
                 <td class="px-3 py-2">v{{ version.version_number }}</td>
                 <td class="px-3 py-2">{{ version.file_name }}</td>
                 <td class="px-3 py-2">{{ version.notes || '-' }}</td>
                 <td class="px-3 py-2">{{ new Date(version.uploaded_at).toLocaleString() }}</td>
                 <td class="px-3 py-2 text-right">
-                  <button class="text-sky-700 hover:underline" @click="downloadVersion(version)">Download</button>
+                  <button class="text-sky-700 hover:text-sky-900 dark:text-sky-400 dark:hover:text-sky-300" @click="downloadVersion(version)">Download</button>
                 </td>
               </tr>
             </tbody>
@@ -298,18 +298,18 @@ onMounted(async () => {
         </div>
       </section>
 
-      <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">Activity Logs</h2>
+      <section class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-6 shadow-sm">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Activity Logs</h2>
 
         <div class="mt-3 space-y-2">
-          <div v-if="activities.length === 0" class="text-sm text-slate-500">No activity found.</div>
+          <div v-if="activities.length === 0" class="text-sm text-slate-500 dark:text-slate-400">No activity found.</div>
           <div
             v-for="activity in activities"
             :key="activity.id"
-            class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+            class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 px-3 py-2 text-sm dark:bg-slate-800/50"
           >
-            <p class="font-medium text-slate-800">{{ activity.action }}</p>
-            <p class="text-slate-600">
+            <p class="font-medium text-slate-800 dark:text-slate-200">{{ activity.action }}</p>
+            <p class="text-slate-600 dark:text-slate-400">
               {{ activity.performed_by?.name || 'Unknown user' }} -
               {{ new Date(activity.created_at).toLocaleString() }}
             </p>

@@ -5,14 +5,14 @@ const { state, remove } = useNotificationStore();
 
 function styleFor(type: 'success' | 'error' | 'info') {
   if (type === 'success') {
-    return 'border-emerald-300 bg-emerald-50 text-emerald-800';
+    return 'border-emerald-200 bg-emerald-50/90 text-emerald-900';
   }
 
   if (type === 'error') {
-    return 'border-red-300 bg-red-50 text-red-800';
+    return 'border-rose-200 bg-rose-50/90 text-rose-900';
   }
 
-  return 'border-sky-300 bg-sky-50 text-sky-800';
+  return 'border-sky-200 bg-sky-50/90 text-sky-900';
 }
 </script>
 
@@ -21,7 +21,7 @@ function styleFor(type: 'success' | 'error' | 'info') {
     <div
       v-for="item in state.items"
       :key="item.id"
-      class="pointer-events-auto rounded-lg border px-4 py-3 text-sm shadow"
+      class="pointer-events-auto rounded-2xl border px-4 py-3 text-sm shadow-[0_18px_40px_-20px_rgba(15,23,42,0.45)] backdrop-blur"
       :class="styleFor(item.type)"
       @click="remove(item.id)"
     >

@@ -114,15 +114,15 @@ onMounted(async () => {
 
     <main class="mx-auto max-w-3xl space-y-4 px-4 py-6">
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-semibold text-slate-900">
+        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">
           {{ isEditMode ? 'Edit Document' : 'Create Document' }}
         </h1>
         <BaseButton variant="secondary" @click="router.push({ name: 'dashboard' })">Back</BaseButton>
       </div>
 
-      <section v-if="loading" class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">Loading...</section>
+      <section v-if="loading" class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-6 shadow-sm">Loading...</section>
 
-      <section v-else class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section v-else class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-6 shadow-sm">
         <DocumentForm
           v-model="form"
           :categories="categories"

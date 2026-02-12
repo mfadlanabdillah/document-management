@@ -256,7 +256,7 @@ onMounted(() => {
     <AppTopbar />
 
     <main class="mx-auto max-w-6xl space-y-4 px-4 py-6">
-      <h1 class="text-2xl font-semibold text-slate-900">Master Data</h1>
+      <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Master Data</h1>
 
       <section class="flex gap-2">
         <BaseButton :variant="activeTab === 'statuses' ? 'primary' : 'secondary'" @click="activeTab = 'statuses'">Status</BaseButton>
@@ -266,8 +266,8 @@ onMounted(() => {
 
       <section v-if="activeTab === 'statuses'" class="space-y-4">
         <div class="grid gap-4 lg:grid-cols-2">
-          <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 class="text-lg font-semibold text-slate-900">{{ statusForm.id ? 'Edit Status' : 'Create Status' }}</h2>
+          <div class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-4 shadow-sm">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ statusForm.id ? 'Edit Status' : 'Create Status' }}</h2>
             <div class="mt-3 grid gap-3">
               <BaseInput v-model="statusForm.code" label="Code" placeholder="e.g. draft_review" />
               <BaseInput v-model="statusForm.name" label="Name" />
@@ -288,13 +288,13 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 class="text-lg font-semibold text-slate-900">Status List</h2>
+          <div class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-4 shadow-sm">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Status List</h2>
             <div class="mt-3 space-y-2">
-              <div v-for="item in statuses" :key="item.id" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
+              <div v-for="item in statuses" :key="item.id" class="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
                 <div>
-                  <p class="font-medium text-slate-900">{{ item.name }} ({{ item.code }})</p>
-                  <p class="text-xs text-slate-600">{{ item.description || '-' }} | active: {{ item.is_active ? 'yes' : 'no' }}</p>
+                  <p class="font-medium text-slate-900 dark:text-slate-100">{{ item.name }} ({{ item.code }})</p>
+                  <p class="text-xs text-slate-600 dark:text-slate-400">{{ item.description || '-' }} | active: {{ item.is_active ? 'yes' : 'no' }}</p>
                 </div>
                 <div class="flex gap-3 text-sm">
                   <button class="text-indigo-700 hover:underline" @click="Object.assign(statusForm, { ...item, is_active: item.is_active ? '1' : '0', sort_order: String(item.sort_order ?? 0) })">Edit</button>
@@ -305,22 +305,23 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">Lifecycle Transition Matrix</h2>
-          <p class="mt-1 text-sm text-slate-600">Set which target statuses are allowed from each source status.</p>
+        <div class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-4 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Lifecycle Transition Matrix</h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Set which target statuses are allowed from each source status.</p>
 
           <div class="mt-3 space-y-3">
-            <div v-for="fromStatus in activeStatuses" :key="fromStatus.id" class="rounded-lg border border-slate-200 p-3">
-              <p class="font-medium text-slate-900">From: {{ fromStatus.name }} ({{ fromStatus.code }})</p>
+            <div v-for="fromStatus in activeStatuses" :key="fromStatus.id" class="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+              <p class="font-medium text-slate-900 dark:text-slate-100">From: {{ fromStatus.name }} ({{ fromStatus.code }})</p>
 
               <div class="mt-2 flex flex-wrap gap-3">
                 <label
                   v-for="toStatus in activeStatuses.filter((status) => status.id !== fromStatus.id)"
                   :key="toStatus.id"
-                  class="inline-flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1 text-sm"
+                  class="inline-flex items-center gap-2 rounded-md border border-slate-200 dark:border-slate-700 px-2 py-1 text-sm"
                 >
                   <input
                     type="checkbox"
+                    class="h-4 w-4 rounded border border-slate-400 accent-sky-600"
                     :checked="(transitionMap[fromStatus.id] ?? []).includes(toStatus.id)"
                     @change="onTransitionToggle(fromStatus.id, toStatus.id, $event)"
                   />
@@ -333,8 +334,8 @@ onMounted(() => {
       </section>
 
       <section v-if="activeTab === 'categories'" class="grid gap-4 lg:grid-cols-2">
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">{{ categoryForm.id ? 'Edit Category' : 'Create Category' }}</h2>
+        <div class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-4 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ categoryForm.id ? 'Edit Category' : 'Create Category' }}</h2>
           <div class="mt-3 grid gap-3">
             <BaseInput v-model="categoryForm.name" label="Name" />
             <BaseInput v-model="categoryForm.slug" label="Slug" />
@@ -346,13 +347,13 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">Category List</h2>
+        <div class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-4 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Category List</h2>
           <div class="mt-3 space-y-2">
-            <div v-for="item in categories" :key="item.id" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
+            <div v-for="item in categories" :key="item.id" class="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
               <div>
-                <p class="font-medium text-slate-900">{{ item.name }}</p>
-                <p class="text-xs text-slate-600">{{ item.slug }}</p>
+                <p class="font-medium text-slate-900 dark:text-slate-100">{{ item.name }}</p>
+                <p class="text-xs text-slate-600 dark:text-slate-400">{{ item.slug }}</p>
               </div>
               <div class="flex gap-3 text-sm">
                 <button class="text-indigo-700 hover:underline" @click="Object.assign(categoryForm, item)">Edit</button>
@@ -364,8 +365,8 @@ onMounted(() => {
       </section>
 
       <section v-if="activeTab === 'tags'" class="grid gap-4 lg:grid-cols-2">
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">{{ tagForm.id ? 'Edit Tag' : 'Create Tag' }}</h2>
+        <div class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-4 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ tagForm.id ? 'Edit Tag' : 'Create Tag' }}</h2>
           <div class="mt-3 grid gap-3">
             <BaseInput v-model="tagForm.name" label="Name" />
             <BaseInput v-model="tagForm.slug" label="Slug" />
@@ -376,13 +377,13 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">Tag List</h2>
+        <div class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-4 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Tag List</h2>
           <div class="mt-3 space-y-2">
-            <div v-for="item in tags" :key="item.id" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
+            <div v-for="item in tags" :key="item.id" class="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
               <div>
-                <p class="font-medium text-slate-900">{{ item.name }}</p>
-                <p class="text-xs text-slate-600">{{ item.slug }}</p>
+                <p class="font-medium text-slate-900 dark:text-slate-100">{{ item.name }}</p>
+                <p class="text-xs text-slate-600 dark:text-slate-400">{{ item.slug }}</p>
               </div>
               <div class="flex gap-3 text-sm">
                 <button class="text-indigo-700 hover:underline" @click="Object.assign(tagForm, item)">Edit</button>

@@ -188,7 +188,7 @@ onMounted(async () => {
 
     <main class="mx-auto max-w-6xl space-y-4 px-4 py-6">
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-semibold text-slate-900">Dashboard</h1>
+        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Dashboard</h1>
         <BaseButton v-if="activeTab === 'documents'" @click="router.push({ name: 'document-create' })">
           Create Document
         </BaseButton>
@@ -226,7 +226,7 @@ onMounted(async () => {
         <BaseButton variant="secondary" @click="restoreLastDeleted">Restore</BaseButton>
       </section>
 
-      <div v-if="loading" class="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
+      <div v-if="loading" class="rounded-2xl border border-white/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl dark:backdrop-brightness-75 p-6 text-sm text-slate-600 dark:text-slate-400 shadow-sm">
         Loading documents...
       </div>
 

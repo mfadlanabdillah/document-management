@@ -94,20 +94,20 @@ function removeTag(id: string) {
         <span
           v-for="tagId in local.tag_ids"
           :key="tagId"
-          class="inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-1 text-xs"
+          class="inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-1 text-xs dark:bg-slate-700 dark:text-slate-200"
         >
           {{ tags.find((tag) => tag.id === tagId)?.name ?? tagId }}
-          <button type="button" class="text-slate-700" @click="removeTag(tagId)">x</button>
+          <button type="button" class="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100" @click="removeTag(tagId)">x</button>
         </span>
       </div>
     </div>
 
     <label v-if="showFileInput" class="block space-y-1">
-      <span class="text-sm font-medium text-slate-700">File</span>
+      <span class="text-sm font-medium text-slate-700 dark:text-slate-300">File</span>
       <input
         type="file"
         accept=".pdf,.docx,.xlsx"
-        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 shadow-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
         @change="onFileChange"
       />
     </label>

@@ -2,11 +2,15 @@
 import { onMounted } from 'vue';
 import NotificationStack from './components/ui/NotificationStack.vue';
 import { me } from './services/auth';
+import { useTheme } from './composables/useTheme';
 import { useAuthStore } from './stores/authStore';
 
 const { state, setProfile, clearAuth } = useAuthStore();
+const { initTheme } = useTheme();
 
 onMounted(async () => {
+  initTheme();
+
   if (!state.token) {
     return;
   }
