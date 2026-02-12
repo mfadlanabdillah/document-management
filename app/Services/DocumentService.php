@@ -4,10 +4,9 @@ namespace App\Services;
 
 use App\Models\Document;
 use App\Models\DocumentActivityLog;
-use App\Enums\DocumentStatus;
-use Illuminate\Support\Facades\DB;
+use App\Models\DocumentStatus;
 use Illuminate\Support\Facades\Auth;
-use App\Services\VersionService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class DocumentService
@@ -19,11 +18,10 @@ class DocumentService
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
-
             $document = Document::create([
                 'title' => $data['title'],
                 'category_id' => $data['category_id'],
-                'status' => DocumentStatus::DRAFT->value,
+                'status' => $this->defaultDraftStatusCode(),
                 'created_by' => auth()->id(),
             ]);
 
@@ -31,7 +29,6 @@ class DocumentService
                 $document->tags()->sync($data['tag_ids']);
             }
 
-            // 🔥 Upload initial version if file exists
             if (request()->hasFile('file')) {
                 $this->versionService->upload(
                     $document,
@@ -45,7 +42,7 @@ class DocumentService
             return $document->fresh([
                 'category',
                 'tags',
-                'currentVersion'
+                'currentVersion',
             ]);
         });
     }
@@ -56,7 +53,7 @@ class DocumentService
 
         if ($oldStatus === $newStatus) {
             throw ValidationException::withMessages([
-                'status' => ['Status is already '.$newStatus.'.']
+                'status' => ['Status is already ' . $newStatus . '.'],
             ]);
         }
 
@@ -74,15 +71,13 @@ class DocumentService
         return $document;
     }
 
-
     public function delete(Document $document)
     {
-        if ($document->status !== DocumentStatus::DRAFT->value) {
+        if ($document->status !== 'draft') {
             throw new \Exception('Only draft documents can be deleted.');
         }
 
         return DB::transaction(function () use ($document) {
-
             $document->delete();
 
             $this->log($document, 'deleted');
@@ -93,24 +88,30 @@ class DocumentService
 
     protected function validateStatusTransition(string $from, string $to): void
     {
-        $from = strtolower($from);
-        $to = strtolower($to);
+        $fromStatus = DocumentStatus::query()
+            ->where('code', strtolower($from))
+            ->where('is_active', true)
+            ->first();
 
-        if ($from === $to) {
-            return;
+        $toStatus = DocumentStatus::query()
+            ->where('code', strtolower($to))
+            ->where('is_active', true)
+            ->first();
+
+        if (!$fromStatus || !$toStatus) {
+            throw ValidationException::withMessages([
+                'status' => ['Status does not exist or is inactive.'],
+            ]);
         }
 
-        $allowedTransitions = [
-            'draft' => ['active'],
-            'active' => ['archived'],
-            'archived' => ['active'],
-        ];
+        $allowed = DB::table('document_status_transitions')
+            ->where('from_status_id', $fromStatus->id)
+            ->where('to_status_id', $toStatus->id)
+            ->exists();
 
-        if (!isset($allowedTransitions[$from]) 
-            || !in_array($to, $allowedTransitions[$from])) {
-
+        if (!$allowed) {
             throw ValidationException::withMessages([
-                'status' => ['Invalid status transition.']
+                'status' => ['Invalid status transition based on current lifecycle matrix.'],
             ]);
         }
     }
@@ -123,5 +124,24 @@ class DocumentService
             'performed_by' => Auth::id(),
             'meta' => $meta,
         ]);
+    }
+
+    private function defaultDraftStatusCode(): string
+    {
+        $draft = DocumentStatus::query()
+            ->where('code', 'draft')
+            ->where('is_active', true)
+            ->first();
+
+        if ($draft) {
+            return $draft->code;
+        }
+
+        $firstActive = DocumentStatus::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->first();
+
+        return $firstActive?->code ?? 'draft';
     }
 }

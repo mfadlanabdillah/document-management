@@ -12,31 +12,38 @@ class DocumentResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-    public function toArray(Request $request): array
+    public function toArray($request): array
     {
         return [
             'id' => $this->id,
             'title' => $this->title,
             'status' => $this->status,
 
-            'category' => [
-                'id' => $this->category?->id,
-                'name' => $this->category?->name,
-            ],
+            'category' => $this->whenLoaded('category', function () {
+                return [
+                    'id' => $this->category->id,
+                    'name' => $this->category->name,
+                ];
+            }),
 
-            'tags' => $this->tags->map(fn ($tag) => [
-                'id' => $tag->id,
-                'name' => $tag->name,
-            ]),
+            'tags' => $this->whenLoaded('tags', function () {
+                return $this->tags->map(fn ($tag) => [
+                    'id' => $tag->id,
+                    'name' => $tag->name,
+                ]);
+            }),
 
-            'current_version' => $this->currentVersion ? [
-                'id' => $this->currentVersion->id,
-                'version_number' => $this->currentVersion->version_number,
-                'file_name' => $this->currentVersion->file_name,
-            ] : null,
+            'current_version' => $this->whenLoaded('currentVersion', function () {
+                return [
+                    'id' => $this->currentVersion->id,
+                    'version_number' => $this->currentVersion->version_number,
+                    'file_name' => $this->currentVersion->file_name,
+                ];
+            }),
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'deleted_at' => $this->deleted_at,
         ];
     }
 }

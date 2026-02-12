@@ -8,11 +8,10 @@ use App\Http\Requests\Document\UpdateDocumentRequest;
 use App\Http\Requests\Document\UpdateStatusRequest;
 use App\Http\Resources\DocumentResource;
 use App\Http\Resources\DocumentActivityLogResource;
-use App\Http\Resources\DocumentCollection;
 use App\Models\Document;
 use App\Services\DocumentService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Http\Resources\BaseApiResource;
 
 class DocumentController extends Controller
 {
@@ -48,24 +47,29 @@ class DocumentController extends Controller
         $query = Document::query()
             ->with(['category', 'currentVersion']);
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        $status = $request->get('status');
+
+        if ($status) {
+            $query->where('status', $status);
+        } else {
+            $query->where('status', '!=', 'archived');
         }
 
-        // Filter by category
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
-        // Search by title
         if ($request->filled('search')) {
-            $query->where('title', 'ilike', '%' . $request->search . '%');
-            // gunakan 'like' jika pakai sqlite/mysql
+            $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        // Sorting
+        $allowedSorts = ['created_at', 'updated_at', 'title'];
+
         $sort = $request->get('sort', 'created_at');
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'created_at';
+        }
+
         $direction = $request->get('direction', 'desc');
 
         $query->orderBy($sort, $direction);
@@ -75,36 +79,76 @@ class DocumentController extends Controller
         );
     }
 
+    /**
+     * GET /documents/trash
+     */
+    public function trash(Request $request)
+    {
+        $query = Document::onlyTrashed()
+            ->with(['category', 'currentVersion']);
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->user()?->role !== 'admin') {
+            $query->where('created_by', $request->user()->id);
+        }
+
+        $allowedSorts = ['deleted_at', 'created_at', 'updated_at', 'title'];
+        $sort = $request->get('sort', 'deleted_at');
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'deleted_at';
+        }
+
+        $direction = $request->get('direction', 'desc');
+        $query->orderBy($sort, $direction);
+
+        return DocumentResource::collection(
+            $query->paginate(10)
+        );
+    }
 
     /**
      * POST /documents
      */
-    public function store(StoreDocumentRequest $request): JsonResponse
-    {
-        $document = $this->documentService->create($request->validated());
+    public function store(StoreDocumentRequest $request)
+{
+    $document = $this->documentService->create($request->validated());
 
-        return (new DocumentResource(
+    return BaseApiResource::success(
+        new DocumentResource(
             $document->load(['category', 'tags', 'currentVersion'])
-        ))->response()->setStatusCode(201);
-    }
+        ),
+        'Document created successfully.',
+        201
+    );
+}
 
 
     /**
      * GET /documents/{document}
      */
-    public function show(Document $document): DocumentResource
+    public function show(Document $document)
     {
         $this->authorize('view', $document);
 
-        return new DocumentResource(
-            $document->load(['category', 'tags', 'versions'])
+        return BaseApiResource::success(
+            new DocumentResource(
+                $document->load(['category', 'tags', 'versions'])
+            ),
+            'Document retrieved successfully.'
         );
     }
 
     /**
      * PUT /documents/{document}
      */
-    public function update(UpdateDocumentRequest $request, Document $document): DocumentResource
+    public function update(UpdateDocumentRequest $request, Document $document)
     {
         $this->authorize('update', $document);
 
@@ -114,15 +158,19 @@ class DocumentController extends Controller
             $document->tags()->sync($request->tag_ids);
         }
 
-        return new DocumentResource(
-            $document->load(['category', 'tags', 'currentVersion'])
+        return BaseApiResource::success(
+            new DocumentResource(
+                $document->load(['category', 'tags', 'currentVersion'])
+            ),
+            'Document updated successfully.'
         );
     }
+
 
     /**
      * PATCH /documents/{document}
      */
-    public function updateStatus(UpdateStatusRequest $request, Document $document): DocumentResource
+    public function updateStatus(UpdateStatusRequest $request, Document $document)
     {
         $this->authorize('update', $document);
 
@@ -131,38 +179,44 @@ class DocumentController extends Controller
             $request->status
         );
 
-        return new DocumentResource($document);
+        return BaseApiResource::success(
+            new DocumentResource($document),
+            'Status updated successfully.'
+        );
     }
+
 
     /**
      * DELETE /documents/{document}
      */
-    public function destroy(Document $document): JsonResponse
+    public function destroy(Document $document)
     {
         $this->authorize('delete', $document);
 
         $this->documentService->delete($document);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Document deleted successfully.',
-            'data' => null,
-            'meta' => [],
-            'errors' => null,
-        ]);
+        return BaseApiResource::success(
+            null,
+            'Document deleted successfully.'
+        );
     }
+
 
     /**
      * POST /documents/{document}/restore
      */
-    public function restore(Document $document): DocumentResource
+    public function restore(Document $document)
     {
         $this->authorize('restore', $document);
 
         $document->restore();
 
-        return new DocumentResource($document);
+        return BaseApiResource::success(
+            new DocumentResource($document),
+            'Document restored successfully.'
+        );
     }
+
 
     public function activities(Document $document)
     {
@@ -173,6 +227,10 @@ class DocumentController extends Controller
             ->latest()
             ->get();
 
-        return DocumentActivityLogResource::collection($logs);
+        return BaseApiResource::success(
+            DocumentActivityLogResource::collection($logs),
+            'Activities retrieved successfully.'
+        );
     }
+
 }

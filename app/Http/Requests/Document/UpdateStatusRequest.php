@@ -3,8 +3,6 @@
 namespace App\Http\Requests\Document;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use App\Enums\DocumentStatus;
 
 class UpdateStatusRequest extends FormRequest
 {
@@ -20,7 +18,7 @@ class UpdateStatusRequest extends FormRequest
             'status' => [
                 'required',
                 'string',
-                Rule::in(array_column(DocumentStatus::cases(), 'value')),
+                'exists:document_statuses,code',
             ],
         ];
     }

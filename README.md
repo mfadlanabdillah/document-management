@@ -1,109 +1,183 @@
-# Document Management API
+# Document Management System
 
-Backend API untuk manajemen dokumen (kategori, tag, versi file, status, dan audit log) menggunakan Laravel 12 + Sanctum. Project ini juga membawa stack Inertia/Vue untuk frontend, namun API utama ada di `routes/api.php`.
+Aplikasi manajemen dokumen berbasis `Laravel 12` + `Vue 3 SPA` dengan fitur:
+- autentikasi token `Sanctum`
+- RBAC (`admin` / `user`)
+- versioning dokumen
+- master data (`status`, `category`, `tag`)
+- status lifecycle matrix yang bisa dikonfigurasi
+- audit log aktivitas dokumen dan manajemen user
+
+## Stack
+- Backend: `Laravel 12`, `Sanctum`, `Fortify`
+- Frontend: `Vue 3`, `Vite`, `TailwindCSS`
+- Test: `Pest`
 
 ## Fitur Utama
-- Dokumen dengan status: `draft`, `active`, `archived`
-- Versi dokumen (upload file, download versi)
-- Kategori dan tag
-- Audit log aktivitas dokumen
-- Otorisasi berbasis policy
-- Autentikasi token via Sanctum
+- Login/register API token
+- Dashboard dokumen + filter + pagination
+- CRUD dokumen + upload versi + download file
+- Trash dokumen + restore
+- Detail dokumen + activity logs
+- User management (admin only)
+- Master data management (admin only):
+  - status CRUD
+  - category CRUD
+  - tag CRUD
+  - status transition matrix (from status -> allowed next status)
+
+## RBAC
+Role user:
+- `admin`: akses penuh, termasuk menu `Users` dan `Master Data`
+- `user`: akses dokumen sesuai policy
+
+Gate:
+- `manage-users`
+- `manage-master-data`
+
+## URL Aplikasi
+- SPA: `http://127.0.0.1:8000/app`
+- API base: `http://127.0.0.1:8000/api`
 
 ## Prasyarat
-- PHP 8.2+
+- PHP `>= 8.2`
 - Composer
-- Node.js & npm
-- SQLite (default) atau database lain sesuai konfigurasi `.env`
+- Node.js + npm
+- PostgreSQL (saat ini konfigurasi aktif project)
 
-## Setup Cepat
+## Setup Lokal
+1. Install dependency:
 ```bash
-composer setup
+composer install
+npm install
 ```
-Perintah ini akan:
-- install dependency
-- membuat `.env`
-- generate `APP_KEY`
-- menjalankan migrasi
-- install dependency frontend dan build asset
 
-Untuk menjalankan aplikasi:
+2. Siapkan `.env`:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+3. Pastikan konfigurasi penting:
+```env
+APP_URL=http://127.0.0.1:8000
+VITE_API_BASE_URL=http://127.0.0.1:8000/api
+```
+
+4. Migrate + seed:
+```bash
+php artisan migrate --seed
+```
+
+5. Jalankan aplikasi:
 ```bash
 composer dev
 ```
 
-## Konfigurasi
-Konfigurasi default menggunakan SQLite di `.env.example`:
+## Fresh Reset (Seperti Baru)
+Untuk reset total database + seed + clear runtime storage:
+```bash
+php artisan optimize:clear
+rm -rf storage/app/documents && mkdir -p storage/app/documents
+printf "*\n!.gitignore\n" > storage/app/documents/.gitignore
+find storage/framework/cache -type f -not -name '.gitignore' -delete
+find storage/framework/sessions -type f -not -name '.gitignore' -delete
+find storage/framework/views -type f -not -name '.gitignore' -delete
+find storage/logs -type f -name '*.log' -delete
+php artisan migrate:fresh --seed --force
 ```
-DB_CONNECTION=sqlite
+
+## Seeder
+Seeder utama dijalankan lewat `DatabaseSeeder`:
+- `CategorySeeder`
+- `TagSeeder`
+- `AdminUserSeeder`
+- `UserSeeder`
+- `DocumentSeeder`
+- `UserManagementAuditLogSeeder`
+
+Admin seed default (bisa override via `.env`):
+```env
+ADMIN_SEED_NAME="System Admin"
+ADMIN_SEED_EMAIL=admin@example.com
+ADMIN_SEED_PASSWORD=password
 ```
-Jika memakai SQLite, pastikan file database ada (default Laravel: `database/database.sqlite`).
 
 ## Autentikasi API
-Login untuk mendapatkan token:
-```
-POST /api/auth/login
-```
-Body:
-```json
-{
-  "email": "user@example.com",
-  "password": "password"
-}
-```
-Response berisi `token`. Gunakan header:
-```
+1. Register:
+- `POST /api/auth/register`
+
+2. Login:
+- `POST /api/auth/login`
+
+3. Cek profil login:
+- `GET /api/auth/me`
+
+Gunakan header:
+```http
 Authorization: Bearer <token>
 ```
 
-## Endpoint API
-Base: `/api`
+## Ringkasan Endpoint API
+### Dokumen
+- `GET /api/documents`
+- `GET /api/documents/trash`
+- `POST /api/documents`
+- `GET /api/documents/{document}`
+- `PUT /api/documents/{document}`
+- `PATCH /api/documents/{document}`
+- `PATCH /api/documents/{document}/status`
+- `DELETE /api/documents/{document}`
+- `POST /api/documents/{document}/restore`
+- `GET /api/documents/{document}/activities`
 
-Dokumen:
-1. `GET /documents`  
-   Query: `category_id`, `status`, `search`
-2. `POST /documents`  
-   Form-data: `title`, `category_id`, `tag_ids[]`, `file` (opsional), `notes` (opsional)
-3. `GET /documents/{document}`
-4. `PUT /documents/{document}`  
-   Body: `title`, `category_id`, `tag_ids[]`
-5. `PATCH /documents/{document}`  
-   Body: `status`
-6. `DELETE /documents/{document}`
-7. `POST /documents/{document}/restore`
+### Versi Dokumen
+- `GET /api/documents/{document}/versions`
+- `POST /api/documents/{document}/versions`
+- `GET /api/documents/{document}/versions/{version}/download`
 
-Versi Dokumen:
-1. `GET /documents/{document}/versions`
-2. `POST /documents/{document}/versions`  
-   Form-data: `file`, `notes` (opsional)
-3. `GET /documents/{document}/versions/{version}/download`
+### Master Data (read)
+- `GET /api/categories`
+- `GET /api/tags`
+- `GET /api/document-statuses`
 
-## Status Dokumen
-Transisi status yang valid:
-- `draft -> active`
-- `active -> archived`
-- `archived -> active`
+### User Management (admin)
+- `GET /api/users`
+- `POST /api/users`
+- `GET /api/users/{user}`
+- `PATCH /api/users/{user}`
+- `PATCH /api/users/{user}/role`
+- `DELETE /api/users/{user}`
+- `GET /api/users/audit-logs`
 
-## Penyimpanan File
-File versi disimpan di:
-```
-storage/app/documents/{document_id}/v{N}.{ext}
-```
+### Master Data Management (admin)
+- Status:
+  - `POST /api/master/statuses`
+  - `PATCH /api/master/statuses/{status}`
+  - `DELETE /api/master/statuses/{status}`
+- Status transition matrix:
+  - `GET /api/master/status-transitions`
+  - `PATCH /api/master/statuses/{status}/transitions`
+- Category:
+  - `GET /api/master/categories`
+  - `POST /api/master/categories`
+  - `PATCH /api/master/categories/{category}`
+  - `DELETE /api/master/categories/{category}`
+- Tag:
+  - `GET /api/master/tags`
+  - `POST /api/master/tags`
+  - `PATCH /api/master/tags/{tag}`
+  - `DELETE /api/master/tags/{tag}`
 
 ## Testing
-Project memakai Pest.
+Jalankan seluruh test:
 ```bash
-composer test
+php artisan test
 ```
 
-## Struktur Domain (Singkat)
-- `Document` (soft delete)
-- `DocumentVersion`
-- `DocumentActivityLog`
-- `Category`
-- `Tag`
+## Catatan Menu Admin
+Setelah login sebagai admin, menu ini muncul di topbar SPA:
+- `Users`
+- `Master Data`
 
-Policy utama: `app/Policies/DocumentPolicy.php`.
-
----
-Jika kamu ingin README ini ditambahkan contoh curl lengkap atau diagram arsitektur, beri tahu.
+Jika tidak muncul, cek role user di tabel `users` harus `admin`.

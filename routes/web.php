@@ -5,13 +5,23 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
+    return redirect()->route('spa');
 })->name('home');
 
+Route::get('/login', function () {
+    return redirect('/app/login');
+})->name('login');
+
+Route::get('/register', function () {
+    return redirect('/app/register');
+})->name('register');
+
 Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    return redirect('/app');
+})->name('dashboard');
+
+Route::get('app/{any?}', function () {
+    return view('spa');
+})->where('any', '.*')->name('spa');
 
 require __DIR__.'/settings.php';

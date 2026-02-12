@@ -21,7 +21,8 @@ class DocumentPolicy
      */
     public function view(User $user, Document $document): bool
     {
-        return $document->created_by === $user->id;
+        return $user->isAdmin()
+            || $document->created_by === $user->id;
     }
 
     /**

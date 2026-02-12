@@ -10,6 +10,7 @@ use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Document;
 use App\Policies\DocumentPolicy;
+use App\Models\User;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         Gate::policy(Document::class, DocumentPolicy::class);
+        Gate::define('manage-users', fn (User $user) => $user->isAdmin());
+        Gate::define('manage-master-data', fn (User $user) => $user->isAdmin());
     }
 
     /**

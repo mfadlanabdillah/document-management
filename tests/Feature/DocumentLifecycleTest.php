@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Models\Category;
+use App\Models\Tag;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DocumentActivityLog;
@@ -146,3 +147,29 @@ it('prevents other users from updating the document', function () {
 
 });
 
+it('returns tags in document detail response', function () {
+    Storage::fake('local');
+
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+    $tagA = Tag::query()->create(['name' => 'Tag A', 'slug' => 'tag-a']);
+    $tagB = Tag::query()->create(['name' => 'Tag B', 'slug' => 'tag-b']);
+
+    $this->actingAs($user);
+
+    $createResponse = $this->postJson('/api/documents', [
+        'title' => 'Tag Response Test',
+        'category_id' => $category->id,
+        'tag_ids' => [$tagA->id, $tagB->id],
+        'file' => UploadedFile::fake()->create('v1.pdf', 100, 'application/pdf'),
+    ])->assertCreated();
+
+    $documentId = $createResponse->json('data.id');
+
+    $detailResponse = $this->getJson("/api/documents/{$documentId}")
+        ->assertOk();
+
+    $tagIds = collect($detailResponse->json('data.tags'))->pluck('id')->all();
+
+    expect($tagIds)->toContain($tagA->id, $tagB->id);
+});

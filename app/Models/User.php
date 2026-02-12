@@ -22,11 +22,12 @@ class User extends Authenticatable
      */
     protected $keyType = 'string';
     public $incrementing = false;
-    
+
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -53,5 +54,10 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }
